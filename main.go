@@ -40,17 +40,24 @@ func main() {
 	userHandler := handler.NewUserHandler(userService, validate, cfg.MaxPaginationLimit)
 
 	adminChecker := middleware.RoleChecker(domain.RoleAdmin)
+	authorizer := middleware.Auth(cfg.JWTSecret)
+	blockChecker := middleware.BlockChecker(userService)
 
 	r := chi.NewRouter()
-	r.Use(chimiddleware.RequestID)
-	r.Use(chimiddleware.Logger)
-	r.Use(chimiddleware.Recoverer)
+	r.Use(
+		chimiddleware.RequestID,
+		chimiddleware.Logger,
+		chimiddleware.Recoverer,
+	)
 
 	r.Post("/auth/register", authHandler.Register)
 	r.Post("/auth/login", authHandler.Login)
 
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.Auth(cfg.JWTSecret))
+		r.Use(
+			authorizer,
+			blockChecker,
+		)
 
 		r.Get("/auth/dumbcheck", authHandler.DumbCheck)
 		r.Get("/users", userHandler.List)

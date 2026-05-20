@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"ssubench/internal/domain"
 	"ssubench/internal/handler"
@@ -37,12 +36,24 @@ func Auth(jwtSecret string) func(http.Handler) http.Handler {
 
 			if err != nil || !token.Valid {
 				handler.SendError(w, http.StatusUnauthorized, "недопустимый токен")
-				log.Print(err.Error())
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), domain.UserIDKey, int(claims["user_id"].(float64)))
-			ctx = context.WithValue(ctx, domain.UserRoleKey, claims["role"].(string))
+			value, ok := claims["user_id"].(float64)
+			if !ok {
+				handler.SendError(w, http.StatusUnauthorized, "недопустимый токен")
+				return
+			}
+			userID := int(value)
+
+			userRole, ok := claims["role"].(string)
+			if !ok {
+				handler.SendError(w, http.StatusUnauthorized, "недопустимый токен")
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), domain.UserIDKey, userID)
+			ctx = context.WithValue(ctx, domain.UserRoleKey, userRole)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

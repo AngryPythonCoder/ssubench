@@ -15,7 +15,7 @@ func RoleChecker(role domain.UserRole) func(http.Handler) http.Handler {
 			userRole := domain.UserRole(r.Context().Value(domain.UserRoleKey).(string))
 
 			if userRole != role {
-				handler.SendError(w, http.StatusUnauthorized, errorMessage)
+				handler.SendError(w, http.StatusForbidden, errorMessage)
 				return
 			}
 
