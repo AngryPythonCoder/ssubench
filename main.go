@@ -39,7 +39,9 @@ func main() {
 	authHandler := handler.NewAuthHandler(authService, validate)
 	userHandler := handler.NewUserHandler(userService, validate, cfg.MaxPaginationLimit)
 
-	adminChecker := middleware.RoleChecker(domain.RoleAdmin)
+	adminChecker := middleware.RoleChecker(func(role domain.UserRole) bool {
+		return role == domain.RoleAdmin
+	})
 	authorizer := middleware.Auth(cfg.JWTSecret)
 	blockChecker := middleware.BlockChecker(userService)
 
