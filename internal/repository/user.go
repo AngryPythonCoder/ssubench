@@ -11,15 +11,15 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type UserRepository struct {
+type PostgresUserRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewUserRepository(db *pgxpool.Pool) *UserRepository {
-	return &UserRepository{db: db}
+func NewPostgresUserRepository(db *pgxpool.Pool) *PostgresUserRepository {
+	return &PostgresUserRepository{db: db}
 }
 
-func (r *UserRepository) Create(ctx context.Context, user *domain.User) error {
+func (r *PostgresUserRepository) Create(ctx context.Context, user *domain.User) error {
 	query := `INSERT INTO users (username, password_hash, role, status, balance)
 			  VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at`
 
@@ -36,17 +36,17 @@ func (r *UserRepository) Create(ctx context.Context, user *domain.User) error {
 
 		if errors.As(err, &pgErr) {
 			if pgErr.Code == "23505" {
-				return fmt.Errorf("UserRepository.Create: %w", domain.ErrUserAlreadyExists)
+				return fmt.Errorf("PostgresUserRepository.Create: %w", domain.ErrUserAlreadyExists)
 			}
 		}
 
-		return fmt.Errorf("UserRepository.Create: %w", err)
+		return fmt.Errorf("PostgresUserRepository.Create: %w", err)
 	}
 
 	return nil
 }
 
-func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
+func (r *PostgresUserRepository) GetByUsername(ctx context.Context, username string) (*domain.User, error) {
 	query := `
 			SELECT id, username, password_hash, role, status, balance, created_at 
 			FROM users 
@@ -66,16 +66,16 @@ func (r *UserRepository) GetByUsername(ctx context.Context, username string) (*d
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("UserRepository.GetByUsername: %w", domain.ErrUserNotFound)
+			return nil, fmt.Errorf("PostgresUserRepository.GetByUsername: %w", domain.ErrUserNotFound)
 		}
 
-		return nil, fmt.Errorf("UserRepository.GetByUsername: %w", err)
+		return nil, fmt.Errorf("PostgresUserRepository.GetByUsername: %w", err)
 	}
 
 	return &user, nil
 }
 
-func (r *UserRepository) GetByID(ctx context.Context, userID int) (*domain.User, error) {
+func (r *PostgresUserRepository) GetByID(ctx context.Context, userID int) (*domain.User, error) {
 	query := `
 			SELECT id, username, password_hash, role, status, balance, created_at 
 			FROM users 
@@ -95,16 +95,16 @@ func (r *UserRepository) GetByID(ctx context.Context, userID int) (*domain.User,
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("UserRepository.GetByID: %w", domain.ErrUserNotFound)
+			return nil, fmt.Errorf("PostgresUserRepository.GetByID: %w", domain.ErrUserNotFound)
 		}
 
-		return nil, fmt.Errorf("UserRepository.GetByID: %w", err)
+		return nil, fmt.Errorf("PostgresUserRepository.GetByID: %w", err)
 	}
 
 	return &user, nil
 }
 
-func (r *UserRepository) List(ctx context.Context, limit, offset int) ([]domain.User, error) {
+func (r *PostgresUserRepository) List(ctx context.Context, limit, offset int) ([]domain.User, error) {
 	query := `
 			SELECT id, username, password_hash, role, status, balance, created_at 
 			FROM users
@@ -114,7 +114,7 @@ func (r *UserRepository) List(ctx context.Context, limit, offset int) ([]domain.
 	rows, err := r.db.Query(ctx, query, limit, offset)
 
 	if err != nil {
-		return nil, fmt.Errorf("UserRepository.List: %w", err)
+		return nil, fmt.Errorf("PostgresUserRepository.List: %w", err)
 	}
 
 	var users []domain.User
@@ -133,7 +133,7 @@ func (r *UserRepository) List(ctx context.Context, limit, offset int) ([]domain.
 		)
 
 		if err != nil {
-			return nil, fmt.Errorf("UserRepository.List: %w", err)
+			return nil, fmt.Errorf("PostgresUserRepository.List: %w", err)
 		}
 
 		users = append(users, user)
@@ -142,7 +142,7 @@ func (r *UserRepository) List(ctx context.Context, limit, offset int) ([]domain.
 	return users, nil
 }
 
-func (r *UserRepository) ChangeStatus(ctx context.Context, userID int, status domain.UserStatus) (*domain.User, error) {
+func (r *PostgresUserRepository) ChangeStatus(ctx context.Context, userID int, status domain.UserStatus) (*domain.User, error) {
 	query := `
 			UPDATE users
 			SET status = $1
@@ -163,16 +163,16 @@ func (r *UserRepository) ChangeStatus(ctx context.Context, userID int, status do
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("UserRepository.ChangeStatus: %w", domain.ErrUserNotFound)
+			return nil, fmt.Errorf("PostgresUserRepository.ChangeStatus: %w", domain.ErrUserNotFound)
 		}
 
-		return nil, fmt.Errorf("UserRepository.ChangeStatus: %w", err)
+		return nil, fmt.Errorf("PostgresUserRepository.ChangeStatus: %w", err)
 	}
 
 	return &user, nil
 }
 
-func (r *UserRepository) SetBalance(ctx context.Context, userID, amount int) (*domain.User, error) {
+func (r *PostgresUserRepository) SetBalance(ctx context.Context, userID, amount int) (*domain.User, error) {
 	query := `
 			UPDATE users
 			SET balance = $1
@@ -193,10 +193,10 @@ func (r *UserRepository) SetBalance(ctx context.Context, userID, amount int) (*d
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("UserRepository.SetBalance: %w", domain.ErrUserNotFound)
+			return nil, fmt.Errorf("PostgresUserRepository.SetBalance: %w", domain.ErrUserNotFound)
 		}
 
-		return nil, fmt.Errorf("UserRepository.SetBalance: %w", err)
+		return nil, fmt.Errorf("PostgresUserRepository.SetBalance: %w", err)
 	}
 
 	return &user, nil

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"ssubench/internal/config"
 	"ssubench/internal/domain"
-	"ssubench/internal/repository"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,11 +13,11 @@ import (
 )
 
 type AuthService struct {
-	repo   *repository.UserRepository
+	repo   domain.UserRepository
 	config *config.Config
 }
 
-func NewAuthService(repo *repository.UserRepository, config *config.Config) *AuthService {
+func NewAuthService(repo domain.UserRepository, config *config.Config) *AuthService {
 	return &AuthService{
 		repo:   repo,
 		config: config,

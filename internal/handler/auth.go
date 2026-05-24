@@ -53,7 +53,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Printf("unhandled error: %v", fmt.Errorf("AuthHandler.Register: %w", err))
-		SendError(w, http.StatusInternalServerError, "что-то пошлоне так")
+		SendError(w, http.StatusInternalServerError, "что-то пошло не так")
 		return
 	}
 

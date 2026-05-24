@@ -29,7 +29,7 @@ func main() {
 	defer db.Pool.Close()
 	log.Println("DB connection is estabilished")
 
-	userRepo := repository.NewUserRepository(db.Pool)
+	userRepo := repository.NewPostgresUserRepository(db.Pool)
 
 	userService := service.NewUserService(userRepo)
 	authService := service.NewAuthService(userRepo, cfg)

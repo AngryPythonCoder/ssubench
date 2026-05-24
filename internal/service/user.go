@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	"ssubench/internal/domain"
-	"ssubench/internal/repository"
 )
 
 type UserService struct {
-	repo *repository.UserRepository
+	repo domain.UserRepository
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
+func NewUserService(repo domain.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
