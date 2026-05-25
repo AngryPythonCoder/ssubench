@@ -67,7 +67,7 @@ func (h *PaymentHandler) List(w http.ResponseWriter, r *http.Request) {
 	offsetString := r.URL.Query().Get("offset")
 
 	limit, err := strconv.Atoi(limitString)
-	if err != nil {
+	if err != nil || limit <= 0 || limit > h.maxPaginationLimit {
 		limit = h.maxPaginationLimit
 	}
 
