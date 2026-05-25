@@ -3,12 +3,21 @@ package domain
 import "errors"
 
 var (
-	ErrUserNotFound       = errors.New("user not found")
-	ErrUserAlreadyExists  = errors.New("user already exists")
 	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrNotAuthorized      = errors.New("not authorized")
+	ErrInsufficientFunds  = errors.New("insufficient funds to complete operation")
 
-	ErrNotAuthorized = errors.New("not authorized")
+	ErrUserNotFound                = errors.New("user not found")
+	ErrUserAlreadyExists           = errors.New("user already exists")
+	ErrUserInvalidStatusTransition = errors.New("invalid status change of a user")
 
+	ErrTaskNotFound                = errors.New("task not found")
+	ErrTaskAlreadyExists           = errors.New("task already exists")
+	ErrTaskInvalidStatusTransition = errors.New("invalid status change of a task")
+
+	ErrBidNotFound      = errors.New("bid not found")
 	ErrBidAlreadyExists = errors.New("bid already exists")
-	ErrTaskNotFound     = errors.New("task not found")
+
+	ErrPaymentNotFound      = errors.New("payment not found")
+	ErrPaymentAlreadyExists = errors.New("payment already exists")
 )

@@ -11,7 +11,7 @@ type Database struct {
 	Pool *pgxpool.Pool
 }
 
-func NewPostgresConnection(ctx context.Context, connString string) (*Database, error) {
+func NewPGXConnection(ctx context.Context, connString string) (*Database, error) {
 	pool, err := pgxpool.New(ctx, connString)
 
 	if err != nil {
@@ -23,6 +23,5 @@ func NewPostgresConnection(ctx context.Context, connString string) (*Database, e
 		return nil, fmt.Errorf("DB does not respond: %v", err)
 	}
 
-	fmt.Println("Successful connection to DB")
 	return &Database{Pool: pool}, nil
 }

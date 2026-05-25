@@ -13,14 +13,16 @@ import (
 )
 
 type AuthService struct {
-	repo   domain.UserRepository
-	config *config.Config
+	txManager domain.TransactionManager
+	repo      domain.UserRepository
+	config    *config.Config
 }
 
-func NewAuthService(repo domain.UserRepository, config *config.Config) *AuthService {
+func NewAuthService(txManager domain.TransactionManager, repo domain.UserRepository, config *config.Config) *AuthService {
 	return &AuthService{
-		repo:   repo,
-		config: config,
+		txManager: txManager,
+		repo:      repo,
+		config:    config,
 	}
 }
 
@@ -49,7 +51,7 @@ func (s *AuthService) Register(ctx context.Context, username, password string, r
 }
 
 func (s *AuthService) Login(ctx context.Context, username string, password string) (string, error) {
-	user, err := s.repo.GetByUsername(ctx, username)
+	user, err := s.repo.GetByUsername(ctx, username, false)
 
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {

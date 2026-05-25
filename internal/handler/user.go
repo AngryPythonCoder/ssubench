@@ -99,6 +99,9 @@ func (h *UserHandler) Block(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			SendError(w, http.StatusNotFound, "данного пользователя не существует")
 			return
+		} else if errors.Is(err, domain.ErrUserInvalidStatusTransition) {
+			SendError(w, http.StatusConflict, "пользователь уже заблокирован")
+			return
 		}
 
 		log.Printf("unhandled error: %v", err)
@@ -121,6 +124,9 @@ func (h *UserHandler) Unblock(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			SendError(w, http.StatusNotFound, "данного пользователя не существует")
+			return
+		} else if errors.Is(err, domain.ErrUserInvalidStatusTransition) {
+			SendError(w, http.StatusConflict, "пользователь уже разблокирован")
 			return
 		}
 
