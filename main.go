@@ -74,10 +74,10 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(
-		chimiddleware.Timeout(60*time.Second),
 		chimiddleware.RequestID,
 		chimiddleware.Logger,
 		chimiddleware.Recoverer,
+		middleware.StandardTimeout(60*time.Second, "Время вышло"),
 	)
 
 	r.Post("/auth/register", authHandler.Register)
