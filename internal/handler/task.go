@@ -281,7 +281,7 @@ func (h *TaskHandler) AcceptBid(w http.ResponseWriter, r *http.Request) {
 			SendError(w, http.StatusNotFound, "данной задачи не существует")
 			return
 		} else if errors.Is(err, domain.ErrBidNotFound) {
-			SendError(w, http.StatusForbidden, "данного отклика не существует")
+			SendError(w, http.StatusNotFound, "данного отклика не существует")
 			return
 		} else if errors.Is(err, domain.ErrNotAuthorized) {
 			SendError(w, http.StatusForbidden, "нет прав, чтобы принять отклик")
@@ -297,7 +297,7 @@ func (h *TaskHandler) AcceptBid(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(task)
 }
 
@@ -329,7 +329,7 @@ func (h *TaskHandler) Finish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(task)
 }
 
@@ -364,7 +364,7 @@ func (h *TaskHandler) Complete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(task)
 }
 
@@ -396,6 +396,6 @@ func (h *TaskHandler) Cancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(task)
 }
