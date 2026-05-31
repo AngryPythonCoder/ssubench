@@ -1,0 +1,862 @@
+openapi: 3.0.3
+info:
+  title: SsuBench API
+  description: Платформа для размещения заданий, где оплата производится виртуальными баллами.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер разработки
+
+tags:
+  - name: Auth
+    description: Регистрация и аутентификация
+  - name: Users
+    description: Управление пользователями
+  - name: Tasks
+    description: Управление задачами
+  - name: Payments
+    description: Просмотр истории операций
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserRole:
+      type: string
+      enum: [customer, performer, admin]
+
+    UserStatus:
+      type: string
+      enum: [active, blocked]
+
+    User:
+      type: object
+      properties:
+        id: 
+          type: integer
+          example: 1
+        username: 
+          type: string
+          minLength: 5
+          maxLength: 16
+          example: 'some_user'
+        role:
+          &ref: '#/components/schemas/UserRole'
+        status: 
+          &ref: '#/components/schemas/UserStatus'
+        balance: 
+          type: integer
+          example: 100
+        created_at: 
+          type: string
+          format: date-time
+          example: '2026-01-01T12:00:00Z'
+
+    Task:
+      type: object
+      properties:
+        id: 
+          type: integer
+          example: 1
+        title: 
+          type: string
+          minLength: 5
+          maxLength: 128
+          example: 'Название задачи'
+        description:
+          type: string
+          minLength: 1
+          maxLength: 65536
+          example: 'Описание задачи'
+        reward:
+          type: integer
+          minimum: 1
+          example: 123
+        status:
+          type: string
+          enum: [published, in_progress, done, completed, canceled]
+        customer_id:
+          type: integer
+          example: 2
+        performer_id:
+          type: integer
+          nullable: true
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-01-01T12:00:00Z'
+
+    Bid:
+      type: object
+      properties:
+        id: 
+          type: integer
+          example: 1
+        task_id:
+          type: integer
+          example: 2
+        performer_id:
+          type: integer
+          example: 3
+        text:
+          type: string
+          minLength: 1
+          maxLength: 4096
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-01-01T12:00:00Z'
+
+    Payment:
+      type: object
+      properties:
+        id: 
+          type: integer
+          example: 1
+        task_id:
+          type: integer
+          example: 2
+        customer_id:
+          type: integer
+          example: 3
+        performer_id:
+          type: integer
+          example: 4
+        amount:
+          type: integer
+          minimum: 1
+          example: 321
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-01-01T12:00:00Z'
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: 'произошла ошибка'
+
+  parameters:
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 100
+        example: 5
+    OffsetParam:
+      name: offset
+      in: query
+      schema:
+        minimum: 0
+        default: 0
+        example: 173
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Регистрация нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, role]
+              properties:
+                username: 
+                  type: string
+                  minLength: 5
+                  maxLength: 16
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 32
+                role:
+                  type: string
+                  enum: [customer, performer]
+            example:
+              username: 'some_user'
+              password: 'password'
+              role: 'performer'
+      responses:
+        '201':
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '409':
+          description: |
+            Возможные ошибки:
+            - данное имя пользователя уже занято
+            - неверный формат запроса
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Аутентификация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: 
+                  type: string
+                  minLength: 5
+                  maxLength: 16
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 32
+            example:
+              username: 'some_user'
+              password: 'password'
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: 
+                    type: string
+              example:
+                token: 'eyJhbGciOiJIUzI1Ni...'
+        '401':
+          description: неверные учётные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: неверный формат запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # --- USERS ---
+  /users:
+    get:
+      tags: [Users]
+      security:
+        bearerAuth: []
+      summary: Получить список пользователей
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: Список пользователей
+          content: 
+            application/json: 
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /users/{user_id}:
+    get:
+      tags: [Users]
+      security:
+        bearerAuth: []
+      summary: Получить пользователя по ID
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Запрошенный пользователь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{user_id}/block:
+    post:
+      tags: [Users]
+      security: 
+        bearerAuth: []
+      summary: Блокировка пользователя (Admin only)
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Пользователь заблокирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Пользователь уже заблокирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{user_id}/unblock:
+    post:
+      tags: [Users]
+      security:
+        bearerAuth: []
+      summary: Разблокировка пользователя (Admin only)
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Пользователь разблокирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Пользователь уже разблокирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{user_id}/set-balance:
+    post:
+      tags: [Users]
+      security:
+        bearerAuth: []
+      summary: Установка баланса (Admin only)
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                  minimum: 0
+            example:
+              amount: 5
+      responses:
+        '200':
+          description: Баланс обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Некорректное тело запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # --- TASKS ---
+  /tasks:
+    get:
+      tags: [Tasks]
+      security:
+        bearerAuth: []
+      summary: Получить список задач
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: Список задач
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+    post:
+      tags: [Tasks]
+      security:
+        bearerAuth: []
+      summary: Создание задачи (Customer only)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description, reward]
+              properties:
+                title:
+                  type: string
+                  minLength: 5
+                  maxLength: 128
+                description:
+                  type: string
+                  minLength: 1
+                  maxLength: 65536
+                reward:
+                  type: integer
+                  minimum: 1
+            example:
+              title: 'Название задачи'
+              description: 'Описание задачи'
+              reward: 5
+      responses:
+        '201':
+          description: Задача создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  /tasks/{task_id}:
+    get:
+      tags: [Tasks]
+      security:
+        bearerAuth: []
+      summary: Получить задачу по ID
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Запрошенная задача
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  /tasks/{task_id}/respond:
+    post:
+      tags: [Tasks]
+      security:
+        bearerAuth: []
+      summary: Откликнуться на задачу (Performer only)
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+                  maxLength: 4096
+            example:
+              text: 'Какой-то текст'
+      responses:
+        '201':
+          description: Отклик создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bid'
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Уже есть отклик от этого пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{task_id}/bids:
+    get:
+      tags: [Tasks]
+      security:
+        bearerAuth: []
+      summary: Получить список откликов на задачу
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: Список откликов на задачу
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bid'
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{task_id}/bids/{bid_id}:
+    get:
+      tags: [Tasks]
+      security:
+      bearerAuth: []
+      summary: Получить отклик по ID отклика и задачи
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - name: bid_id
+          in: path
+          required: true
+          schema: 
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Запрошенный отклик
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bid'
+        '404':
+          description: |
+            Возможные ошибки:
+            - Задача не найдена
+            - Отклик не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{task_id}/bids/{bid_id}/accept:
+    post:
+      tags: [Tasks]
+      security:
+      bearerAuth: []
+      summary: Принять отклик (Customer only)
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - name: bid_id
+          in: path
+          required: true
+          schema: 
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Исполнитель назначен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '403':
+          description: Нет доступа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            Возможные ошибки:
+            - Задача не найдена
+            - Отклик не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Некорректный переход задачи по статусам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{task_id}/finish:
+    post:
+      tags: [Tasks]
+      security:
+        bearerAuth: []
+      summary: Пометить как выполненную (Performer only)
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Задача выполнена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '403':
+          description: Нет доступа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Некорректный переход задачи по статусам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{task_id}/confirm:
+    post:
+      tags: [Tasks]
+      security:
+        bearerAuth: []
+      summary: Подтвердить выполнение и оплатить (Customer only)
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Выполнение подтверждено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '403':
+          description: Нет доступа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: |
+            Возможные ошибки:
+            - Некорректный переход задачи по статусам
+            - Недостаточное количество средств у заказчика
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{task_id}/cancel:
+    post:
+      tags: [Tasks]
+      security:
+        bearerAuth: []
+      summary: Отменить задачу (Customer only)
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Задача отменена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '403':
+          description: Нет доступа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Некорректный переход задачи по статусам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # --- PAYMENTS ---
+  /payments:
+    get:
+      tags: [Payments]
+      security: 
+        bearerAuth: []
+      summary: Получить список переводов баллов
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/OffsetParam'
+      responses:
+        '200':
+          description: Список переводов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+
+  /payments/{payment_id}:
+    get:
+      tags: [Payments]
+      security:
+        bearerAuth: []
+      summary: Получить перевод по ID
+      parameters:
+        - name: payment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Запрошенный перевод
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          description: Перевод не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
