@@ -23,7 +23,7 @@ security:
 
 components:
   securitySchemes:
-    bearerAuth:
+    BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
@@ -49,9 +49,9 @@ components:
           maxLength: 16
           example: 'some_user'
         role:
-          &ref: '#/components/schemas/UserRole'
+          $ref: '#/components/schemas/UserRole'
         status: 
-          &ref: '#/components/schemas/UserStatus'
+          $ref: '#/components/schemas/UserStatus'
         balance: 
           type: integer
           example: 100
@@ -275,7 +275,7 @@ paths:
     get:
       tags: [Users]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Получить список пользователей
       parameters:
         - $ref: '#/components/parameters/LimitParam'
@@ -294,7 +294,7 @@ paths:
     get:
       tags: [Users]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Получить пользователя по ID
       parameters:
         - name: user_id
@@ -321,7 +321,7 @@ paths:
     post:
       tags: [Users]
       security: 
-        bearerAuth: []
+        - BearerAuth: []
       summary: Блокировка пользователя (Admin only)
       parameters:
         - name: user_id
@@ -360,7 +360,7 @@ paths:
     post:
       tags: [Users]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Разблокировка пользователя (Admin only)
       parameters:
         - name: user_id
@@ -399,7 +399,7 @@ paths:
     post:
       tags: [Users]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Установка баланса (Admin only)
       parameters:
         - name: user_id
@@ -456,7 +456,7 @@ paths:
     get:
       tags: [Tasks]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Получить список задач
       parameters:
         - $ref: '#/components/parameters/LimitParam'
@@ -473,7 +473,7 @@ paths:
     post:
       tags: [Tasks]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Создание задачи (Customer only)
       requestBody:
         content:
@@ -509,7 +509,7 @@ paths:
     get:
       tags: [Tasks]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Получить задачу по ID
       parameters:
         - name: task_id
@@ -537,7 +537,7 @@ paths:
     post:
       tags: [Tasks]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Откликнуться на задачу (Performer only)
       parameters:
         - name: task_id
@@ -583,7 +583,7 @@ paths:
     get:
       tags: [Tasks]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Получить список откликов на задачу
       parameters:
         - name: task_id
@@ -614,7 +614,7 @@ paths:
     get:
       tags: [Tasks]
       security:
-      bearerAuth: []
+        - BearerAuth: []
       summary: Получить отклик по ID отклика и задачи
       parameters:
         - name: task_id
@@ -650,7 +650,7 @@ paths:
     post:
       tags: [Tasks]
       security:
-      bearerAuth: []
+        - BearerAuth: []
       summary: Принять отклик (Customer only)
       parameters:
         - name: task_id
@@ -698,7 +698,7 @@ paths:
     post:
       tags: [Tasks]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Пометить как выполненную (Performer only)
       parameters:
         - name: task_id
@@ -737,7 +737,7 @@ paths:
     post:
       tags: [Tasks]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Подтвердить выполнение и оплатить (Customer only)
       parameters:
         - name: task_id
@@ -779,7 +779,7 @@ paths:
     post:
       tags: [Tasks]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Отменить задачу (Customer only)
       parameters:
         - name: task_id
@@ -819,7 +819,7 @@ paths:
     get:
       tags: [Payments]
       security: 
-        bearerAuth: []
+        - BearerAuth: []
       summary: Получить список переводов баллов
       parameters:
         - $ref: '#/components/parameters/LimitParam'
@@ -838,7 +838,7 @@ paths:
     get:
       tags: [Payments]
       security:
-        bearerAuth: []
+        - BearerAuth: []
       summary: Получить перевод по ID
       parameters:
         - name: payment_id
