@@ -160,7 +160,6 @@ func (h *UserHandler) SetBalance(w http.ResponseWriter, r *http.Request) {
 
 	err = h.validate.Struct(request)
 	if err != nil {
-		log.Printf("Error: %v", err)
 		SendError(w, http.StatusUnprocessableEntity, "данные не прошли валидацию")
 		return
 	}
