@@ -16,7 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SetupHandler(pool *pgxpool.Pool, cfg *config.Config) http.Handler {
+func SetupHandler(pool *pgxpool.Pool, cfg *config.Config, useLogger bool) http.Handler {
 	txManager := repository.NewPGXTXManager(pool)
 	userRepo := repository.NewPGXUserRepository(pool)
 	taskRepo := repository.NewPGXTaskRepository(pool)
@@ -48,9 +48,11 @@ func SetupHandler(pool *pgxpool.Pool, cfg *config.Config) http.Handler {
 	blockChecker := middleware.BlockChecker(userService)
 
 	r := chi.NewRouter()
+	r.Use(chimiddleware.RequestID)
+	if useLogger {
+		r.Use(chimiddleware.Logger)
+	}
 	r.Use(
-		chimiddleware.RequestID,
-		// chimiddleware.Logger,
 		chimiddleware.Recoverer,
 		middleware.StandardTimeout(60*time.Second, "Время вышло"),
 	)

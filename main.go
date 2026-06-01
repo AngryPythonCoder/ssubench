@@ -35,7 +35,7 @@ func main() {
 	defer db.Pool.Close()
 	log.Println("DB connection is estabilished")
 
-	router := app.SetupHandler(db.Pool, cfg)
+	router := app.SetupHandler(db.Pool, cfg, true)
 
 	server := &http.Server{
 		Addr:         ":" + cfg.ServerPort,
