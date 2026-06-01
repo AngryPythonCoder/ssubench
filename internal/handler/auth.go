@@ -86,6 +86,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, domain.ErrInvalidCredentials) {
 			SendError(w, http.StatusUnauthorized, "некорректные данные")
+			return
 		}
 
 		log.Printf("unhandled error: %v", fmt.Errorf("AuthHandler.Login: %w", err))
