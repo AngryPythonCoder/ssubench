@@ -8,7 +8,6 @@ import (
 	"ssubench/internal/middleware"
 	"ssubench/internal/repository"
 	"ssubench/internal/service"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -54,7 +53,7 @@ func SetupHandler(pool *pgxpool.Pool, cfg *config.Config, useLogger bool) http.H
 	}
 	r.Use(
 		chimiddleware.Recoverer,
-		middleware.StandardTimeout(60*time.Second, "Время вышло"),
+		middleware.StandardTimeout(cfg.ServerTimeout, "Время вышло"),
 	)
 
 	r.Post("/auth/register", authHandler.Register)

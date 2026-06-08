@@ -15,6 +15,10 @@ type Config struct {
 	StartingBalance    int
 	MaxPaginationLimit int
 	ServerPort         string
+	ServerTimeout      time.Duration
+	ReadTimeout        time.Duration
+	WriteTimeout       time.Duration
+	IdleTimeout        time.Duration
 }
 
 func Load() (*Config, error) {
@@ -28,6 +32,10 @@ func Load() (*Config, error) {
 		StartingBalance:    0,
 		MaxPaginationLimit: 100,
 		ServerPort:         getEnv("PORT", "8080"),
+		ServerTimeout:      15 * time.Second,
+		ReadTimeout:        15 * time.Second,
+		WriteTimeout:       15 * time.Second,
+		IdleTimeout:        60 * time.Second,
 	}
 
 	return cfg, nil
